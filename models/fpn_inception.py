@@ -3,6 +3,9 @@ import torch.nn as nn
 from pretrainedmodels import inceptionresnetv2
 from torchsummary import summary
 import torch.nn.functional as F
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 class FPNHead(nn.Module):
     def __init__(self, num_in, num_mid, num_out):
@@ -59,7 +62,7 @@ class FPNInception(nn.Module):
 
         self.final = nn.Conv2d(num_filters // 2, output_ch, kernel_size=3, padding=1)
 
-    def unfreeze(self):
+    def unfreeze(self):  # 解冻 （为什么解冻）
         self.fpn.unfreeze()
 
     def forward(self, x):
@@ -91,7 +94,7 @@ class FPN(nn.Module):
         """
 
         super().__init__()
-        self.inception = inceptionresnetv2(num_classes=1000, pretrained='imagenet')
+        self.inception = inceptionresnetv2(num_classes=1000, pretrained='imagenet')   #  下载InceptionResNetV2模型
 
         self.enc0 = self.inception.conv2d_1a
         self.enc1 = nn.Sequential(
@@ -130,7 +133,7 @@ class FPN(nn.Module):
         self.lateral0 = nn.Conv2d(32, num_filters // 2, kernel_size=1, bias=False)
 
         for param in self.inception.parameters():
-            param.requires_grad = False
+            param.requires_grad = False                 # 屏蔽预训练模型的权重，只训练全连接层的权重
 
     def unfreeze(self):
         for param in self.inception.parameters():

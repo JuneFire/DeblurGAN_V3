@@ -83,7 +83,7 @@ class FPN(nn.Module):
 
         if pretrained:
             #Load weights into the project directory
-            state_dict = torch.load('mobilenetv2.pth.tar') # add map_location='cpu' if no gpu
+            state_dict = torch.load('./mobilenet_v2.pth.tar') # add map_location='cpu' if no gpu  路径要准确
             net.load_state_dict(state_dict)
         self.features = net.features
 

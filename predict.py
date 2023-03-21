@@ -12,6 +12,7 @@ from tqdm import tqdm
 from aug import get_normalize
 from models.networks import get_generator
 
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 class Predictor:
     def __init__(self, weights_path: str, model_name: str = ''):
@@ -90,7 +91,7 @@ def process_video(pairs, predictor, output_dir):
 
 def main(img_pattern: str,
          mask_pattern: Optional[str] = None,
-         weights_path='fpn_inception.h5',
+         weights_path='./offical_models/fpn_inception.h5',
          out_dir='submit/',
          side_by_side: bool = False,
          video: bool = False):
@@ -124,7 +125,7 @@ def main(img_pattern: str,
 #     print(filenames)
 def get_files():
     list=[]
-    for filepath,dirnames,filenames in os.walk(r'.\dataset1\blur'):
+    for filepath,dirnames,filenames in os.walk(r'./dataset1/blur'):
         for filename in filenames:
             list.append(os.path.join(filepath,filename))
     return list

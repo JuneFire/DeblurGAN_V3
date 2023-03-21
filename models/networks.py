@@ -13,6 +13,8 @@ from models.fpn_densenet import FPNDense
 # Functions
 ###############################################################################
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 def get_norm_layer(norm_type='instance'):
     if norm_type == 'batch':
@@ -267,7 +269,7 @@ def get_fullD(model_config):
                                   use_sigmoid=False)
     return model_d
 
-
+# 生成器model
 def get_generator(model_config):
     generator_name = model_config['g_name']
     if generator_name == 'resnet':
@@ -291,7 +293,7 @@ def get_generator(model_config):
 
     return nn.DataParallel(model_g)
 
-
+# 判别器 model
 def get_discriminator(model_config):
     discriminator_name = model_config['d_name']
     if discriminator_name == 'no_gan':
@@ -305,7 +307,7 @@ def get_discriminator(model_config):
         patch_gan = NLayerDiscriminator(n_layers=model_config['d_layers'],
                                         norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
                                         use_sigmoid=False)
-        patch_gan = nn.DataParallel(patch_gan)
+        patch_gan = nn.DataParallel(patch_gan)     # 当迭代次数或者epoch足够大的时候，我们通常会使用nn.DataParallel函数来用多个GPU来加速训练
         full_gan = get_fullD(model_config)
         full_gan = nn.DataParallel(full_gan)
         model_d = {'patch': patch_gan,

@@ -33,7 +33,7 @@ class MetricCounter:
             self.metrics[name].append(value)
 
     def loss_message(self):
-        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('G_loss', 'PSNR', 'SSIM'))
+        metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('G_loss', 'D_loss', 'PSNR', 'SSIM'))
         return '; '.join(map(lambda x: f'{x[0]}={x[1]:.4f}', metrics))
 
     def write_to_tensorboard(self, epoch_num, validation=False):
@@ -54,3 +54,4 @@ class MetricCounter:
             self.best_metric = cur_metric
             return True
         return False
+

@@ -12,6 +12,7 @@ from util.image_pool import ImagePool
 # Functions
 ###############################################################################
 
+
 class ContentLoss():
     def initialize(self, loss):
         self.criterion = loss
@@ -22,7 +23,7 @@ class ContentLoss():
     def __call__(self, fakeIm, realIm):
         return self.get_loss(fakeIm, realIm)
 
-
+# https://blog.csdn.net/weixin_43135178/article/details/116784366  感知损失
 class PerceptualLoss():
 
     def contentFunc(self):
@@ -229,7 +230,7 @@ class DiscLossLS(DiscLoss):
     def get_loss(self, net, fakeB, realB):
         return DiscLoss.get_loss(self, net, fakeB, realB)
 
-
+# https://blog.csdn.net/sothink3/article/details/124780094  关于WGANGP的讲解
 class DiscLossWGANGP(DiscLossLS):
     def name(self):
         return 'DiscLossWGAN-GP'
@@ -243,7 +244,7 @@ class DiscLossWGANGP(DiscLossLS):
         self.D_fake = net.forward(fakeB)
         return -self.D_fake.mean()
 
-    def calc_gradient_penalty(self, netD, real_data, fake_data):
+    def calc_gradient_penalty(self, netD, real_data, fake_data):  # todo
         alpha = torch.rand(1, 1)
         alpha = alpha.expand(real_data.size())
         alpha = alpha.cuda()

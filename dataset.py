@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 import aug
 
-
+# 采集训练集和测试机
 def subsample(data: Iterable, bounds: Tuple[float, float], hash_fn: Callable, n_buckets=100, salt='', verbose=True):
     data = list(data)
     buckets = split_into_buckets(data, n_buckets=n_buckets, salt=salt, hash_fn=hash_fn)
@@ -86,7 +86,7 @@ class PairedDataset(Dataset):
     @staticmethod
     def _preload(x: str, preload_size: int):
         img = _read_img(x)
-        if preload_size:
+        if preload_size:             # 如果数字是0，就会被认为是False。
             h, w, *_ = img.shape
             h_scale = preload_size / h
             w_scale = preload_size / w

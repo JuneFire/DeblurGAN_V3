@@ -81,8 +81,8 @@ class DoubleGAN(GANTrainer):
         GANTrainer.__init__(self, net_d, criterion)
         self.patch_d = net_d['patch'].cuda()
         self.full_d = net_d['full'].cuda()
-        self.full_criterion = copy.deepcopy(criterion)
-
+        self.full_criterion = copy.deepcopy(criterion)  # models/losses.py:233 DiscLossWGANGP
+    # (patch_d + full_d) / 2 = loss_d
     def loss_d(self, pred, gt):
         return (self.criterion(self.patch_d, pred, gt) + self.full_criterion(self.full_d, pred, gt)) / 2
 

@@ -5,15 +5,17 @@ experiment_desc: fpn
 train:
 #  files_a: &FILES_A /datasets/my_dataset/**/*.jpg
   #可以使用绝对路径
-  files_a: &FILES_A D:/deblur/goprol_large/**/*.png
-  files_b: *FILES_A
-#  files_a: &FILES_A ./dataset1/blur/*.png
-#  files_b: &FILES_B ./dataset1/sharp/*.png
+#  files_a: &FILES_A D:/deblur/goprol_large/**/*.png
+#  files_b: *FILES_A
+#  files_a: &FILES_A ../datasets/blurred_sharp/train/blurred/*.png
+#  files_b: &FILES_B ../datasets/blurred_sharp/train/sharp/*.png
+  files_a: &FILES_A ../datasets/GOPRO/GOPRO_3840FPS_AVG_3-21/**/blur/**/*.png
+  files_b: &FILES_B ../datasets/GOPRO/GOPRO_3840FPS_AVG_3-21/**/sharp/**/*.png
   size: &SIZE 256
   crop: random
-  preload: &PRELOAD false
-  preload_size: &PRELOAD_SIZE 0
-  bounds: [0, .9]
+  preload: &PRELOAD True          # 是否预加载
+  preload_size: &PRELOAD_SIZE 0  # 256 它决定了预加载图像的最小尺寸为256*256像素。
+  bounds: [0, .9]               #取前90%的hash排序后的数据
   scope: geometric
   corrupt: &CORRUPT
     - name: cutout
@@ -30,44 +32,45 @@ train:
     - name: rgb_shift
     - name: hsv_shift
     - name: sharpen
-
+#  验证集是从训练集里HASH随机取出来的数据，不需要手动设置
 val:
+#  files_a: &FILES_A ../dataset/blurred_sharp/val/blurred/*.png
+#  files_b: &FILES_B ../dataset/blurred_sharp/val/sharp/*.png
   files_a: *FILES_A
-  files_b: *FILES_A
-#  files_a: &FILES_A
-#  files_b: &FILES_B
+  files_b: *FILES_B
   size: *SIZE
   scope: geometric
   crop: center
   preload: *PRELOAD
   preload_size: *PRELOAD_SIZE
-  bounds: [.9, 1]
+  bounds: [.9, 1]  #取最后10%的hash排序后的数据
   corrupt: *CORRUPT
 
 phase: train
 warmup_num: 3
 model:
-  g_name: fpn_inception
+  g_name: fpn_inception   # fpn_inception 、 fpn_mobilenet
   blocks: 9
   d_name: double_gan # may be no_gan, patch_gan, double_gan, multi_scale
   d_layers: 3
   content_loss: perceptual
   adv_lambda: 0.001
-  disc_loss: wgan-gp
+  disc_loss: wgan-gp  # wgan-gp ragan-ls
   learn_residual: True
   norm_layer: instance
   dropout: True
 
-num_epochs: 10
+num_epochs: 120
 train_batches_per_epoch: 1000
 val_batches_per_epoch: 100
-batch_size: 1
+batch_size: 4
 image_size: [256, 256]
 
 optimizer:
   name: adam
-  lr: 0.01
+  lr: 0.0001   # 损失率太大的话 效果不好
 scheduler:
   name: linear
-  start_epoch: 50
+  start_epoch: 60
   min_lr: 0.0000001
+
