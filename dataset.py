@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 import aug
 
-# 采集训练集和测试机
+# 采集训练集和测试集
 def subsample(data: Iterable, bounds: Tuple[float, float], hash_fn: Callable, n_buckets=100, salt='', verbose=True):
     data = list(data)
     buckets = split_into_buckets(data, n_buckets=n_buckets, salt=salt, hash_fn=hash_fn)
@@ -108,9 +108,9 @@ class PairedDataset(Dataset):
         a, b = self.data_a[idx], self.data_b[idx]
         if not self.preload:
             a, b = map(_read_img, (a, b))
-        a, b = self.transform_fn(a, b)
+        a, b = self.transform_fn(a, b)  #
         if self.corrupt_fn is not None:
-            a = self.corrupt_fn(a)
+            a = self.corrupt_fn(a)   #
         a, b = self._preprocess(a, b)
         return {'a': a, 'b': b}
 

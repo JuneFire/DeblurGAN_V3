@@ -41,9 +41,9 @@ class PerceptualLoss():
 
     def initialize(self, loss):
         with torch.no_grad():
-            self.criterion = loss
+            self.criterion = loss       # MESLoss
             self.contentFunc = self.contentFunc()
-            self.transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            self.transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])   # 标准化
 
     def get_loss(self, fakeIm, realIm):
         fakeIm = (fakeIm + 1) / 2.0
@@ -125,7 +125,7 @@ class DiscLoss(nn.Module):
         # Combined loss
         self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
         return self.loss_D
-
+    # TODO call函数
     def __call__(self, net, fakeB, realB):
         return self.get_loss(net, fakeB, realB)
 
@@ -242,7 +242,7 @@ class DiscLossWGANGP(DiscLossLS):
     def get_g_loss(self, net, fakeB, realB):
         # First, G(A) should fake the discriminator
         self.D_fake = net.forward(fakeB)
-        return -self.D_fake.mean()
+        return -self.D_fake.mean()   # TODO 这里为什么加 负号
 
     def calc_gradient_penalty(self, netD, real_data, fake_data):  # todo
         alpha = torch.rand(1, 1)
@@ -262,9 +262,9 @@ class DiscLossWGANGP(DiscLossLS):
 
         gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * self.LAMBDA
         return gradient_penalty
-
+    # 判别器计算损失
     def get_loss(self, net, fakeB, realB):
-        self.D_fake = net.forward(fakeB.detach())
+        self.D_fake = net.forward(fakeB.detach())   # 计算假图
         self.D_fake = self.D_fake.mean()
 
         # Real
@@ -272,7 +272,7 @@ class DiscLossWGANGP(DiscLossLS):
         self.D_real = self.D_real.mean()
         # Combined loss
         self.loss_D = self.D_fake - self.D_real
-        gradient_penalty = self.calc_gradient_penalty(net, realB.data, fakeB.data)
+        gradient_penalty = self.calc_gradient_penalty(net, realB.data, fakeB.data)  # TODO 作用？
         return self.loss_D + gradient_penalty
 
 

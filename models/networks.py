@@ -9,6 +9,9 @@ from models.fpn_inception import FPNInception
 from models.fpn_inception_simple import FPNInceptionSimple
 from models.unet_seresnext import UNetSEResNext
 from models.fpn_densenet import FPNDense
+
+from models.NAFNet_arch import NAFNet
+from models.arch_util import LayerNorm2d
 ###############################################################################
 # Functions
 ###############################################################################
@@ -226,29 +229,31 @@ class NLayerDiscriminator(nn.Module):
             use_bias = norm_layer == nn.InstanceNorm2d
 
         kw = 4
-        padw = int(np.ceil((kw-1)/2))
+        padw = int(np.ceil((kw-1)/2))  # 2
         sequence = [
-            nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),
+            nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),  # 3, 64
             nn.LeakyReLU(0.2, True)
         ]
 
         nf_mult = 1
-        for n in range(1, n_layers):
+        for n in range(1, n_layers):  # patch_d n_layers = 3, full_d n_layers = 5
             nf_mult_prev = nf_mult
             nf_mult = min(2**n, 8)
             sequence += [
                 nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
                           kernel_size=kw, stride=2, padding=padw, bias=use_bias),
-                norm_layer(ndf * nf_mult),
+                # norm_layer(ndf * nf_mult),
+                LayerNorm2d(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
 
         nf_mult_prev = nf_mult
-        nf_mult = min(2**n_layers, 8)
+        nf_mult = min(2**n_layers, 8)  # 8
         sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,
+            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult,  # path_d 64 * 4, 64 * 8, full_d  64 * 8, 64 * 8
                       kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            norm_layer(ndf * nf_mult),
+            # norm_layer(ndf * nf_mult),
+            LayerNorm2d(ndf * nf_mult),  # 换个normalization
             nn.LeakyReLU(0.2, True)
         ]
 
@@ -288,6 +293,9 @@ def get_generator(model_config):
     elif generator_name == 'unet_seresnext':
         model_g = UNetSEResNext(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
                                 pretrained=model_config['pretrained'])
+    elif generator_name == 'NAFNet_arch':
+        model_g = NAFNet(img_channel=3, width=64, middle_blk_num=1,
+                      enc_blk_nums=[28, 1, 1, 1], dec_blk_nums=[1, 1, 1, 1])
     else:
         raise ValueError("Generator Network [%s] not recognized." % generator_name)
 

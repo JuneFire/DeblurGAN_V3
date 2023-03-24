@@ -4,6 +4,8 @@ from pretrainedmodels import inceptionresnetv2
 from torchsummary import summary
 import torch.nn.functional as F
 import ssl
+
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -43,26 +45,26 @@ class FPNInception(nn.Module):
 
         # The segmentation heads on top of the FPN
 
-        self.head1 = FPNHead(num_filters_fpn, num_filters, num_filters)
+        self.head1 = FPNHead(num_filters_fpn, num_filters, num_filters)  # 256,128,128
         self.head2 = FPNHead(num_filters_fpn, num_filters, num_filters)
         self.head3 = FPNHead(num_filters_fpn, num_filters, num_filters)
         self.head4 = FPNHead(num_filters_fpn, num_filters, num_filters)
 
         self.smooth = nn.Sequential(
-            nn.Conv2d(4 * num_filters, num_filters, kernel_size=3, padding=1),
+            nn.Conv2d(4 * num_filters, num_filters, kernel_size=3, padding=1),  # 512, 128
             norm_layer(num_filters),
             nn.ReLU(),
         )
 
         self.smooth2 = nn.Sequential(
-            nn.Conv2d(num_filters, num_filters // 2, kernel_size=3, padding=1),
+            nn.Conv2d(num_filters, num_filters // 2, kernel_size=3, padding=1),  # 128, 64
             norm_layer(num_filters // 2),
             nn.ReLU(),
         )
 
-        self.final = nn.Conv2d(num_filters // 2, output_ch, kernel_size=3, padding=1)
+        self.final = nn.Conv2d(num_filters // 2, output_ch, kernel_size=3, padding=1)  # 128, 3
 
-    def unfreeze(self):  # 解冻 （为什么解冻）
+    def unfreeze(self):
         self.fpn.unfreeze()
 
     def forward(self, x):
@@ -81,7 +83,7 @@ class FPNInception(nn.Module):
         final = self.final(smoothed)
         res = torch.tanh(final) + x
 
-        return torch.clamp(res, min = -1,max = 1)
+        return torch.clamp(res, min = -1,max = 1)   # clamp（）函数的功能将输入input张量每个元素的值压缩到区间 [min,max]，并返回结果到一个新张量。
 
 
 class FPN(nn.Module):
@@ -133,7 +135,7 @@ class FPN(nn.Module):
         self.lateral0 = nn.Conv2d(32, num_filters // 2, kernel_size=1, bias=False)
 
         for param in self.inception.parameters():
-            param.requires_grad = False                 # 屏蔽预训练模型的权重，只训练全连接层的权重
+            param.requires_grad = False                 # 屏蔽预训练模型的权重，只训练全连接层的权重 (parameters的梯度计算关闭不影响误差反向传播，但是权重和偏置值不更新了)
 
     def unfreeze(self):
         for param in self.inception.parameters():
@@ -168,3 +170,17 @@ class FPN(nn.Module):
         map2 = self.td2(F.pad(lateral2, pad, "reflect") + nn.functional.upsample(map3, scale_factor=2, mode="nearest"))
         map1 = self.td3(lateral1 + nn.functional.upsample(map2, scale_factor=2, mode="nearest"))
         return F.pad(lateral0, pad1, "reflect"), map1, map2, map3, map4
+
+
+
+
+if __name__=='__main__':
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    import functools
+    net = FPNInception(norm_layer=functools.partial(nn.InstanceNorm2d, affine=False, track_running_stats=True))
+    x = torch.randn(1, 3, 256, 256)
+    net = net.to(device)
+    x = x.to(device)
+    out = net(x)
+
+    print(out.shape)

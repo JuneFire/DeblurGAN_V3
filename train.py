@@ -38,8 +38,8 @@ class Trainer:
     def train(self):
         self._init_params()
         for epoch in range(0, self.config['num_epochs']):
-            if (epoch == self.warmup_epochs) and not (self.warmup_epochs == 0):
-                self.netG.module.unfreeze()
+            if (epoch == self.warmup_epochs) and not (self.warmup_epochs == 0):    # 热身运动
+                # self.netG.module.unfreeze()  # FPN模型是需要打开的
                 self.optimizer_G = self._get_optim(self.netG.parameters())
                 self.scheduler_G = self._get_scheduler(self.optimizer_G)
             self._run_epoch(epoch)  # 训练
@@ -72,7 +72,7 @@ class Trainer:
             outputs = self.netG(inputs)
             loss_D = self._update_d(outputs, targets)  # 计算判别器损失
             self.optimizer_G.zero_grad()
-            loss_content = self.criterionG(outputs, targets)  # 计算生成器损失 PerceptualLoss
+            loss_content = self.criterionG(outputs, targets)  # 计算 PerceptualLoss
             loss_adv = self.adv_trainer.loss_g(outputs, targets)  # 计算生成器损失
             loss_G = loss_content + self.adv_lambda * loss_adv  # 生成器损失  感知损失+wgangp损失
             loss_G.backward()
@@ -120,7 +120,7 @@ class Trainer:
         if self.config['model']['d_name'] == 'no_gan':
             return 0
         self.optimizer_D.zero_grad()
-        loss_D = self.adv_lambda * self.adv_trainer.loss_d(outputs, targets)  # outputs->生成值，targets->真实值
+        loss_D = self.adv_lambda * self.adv_trainer.loss_d(outputs, targets)  # 判别器的损失值 outputs->生成值，targets->真实值
         loss_D.backward(retain_graph=True)
         self.optimizer_D.step()
         return loss_D.item()
